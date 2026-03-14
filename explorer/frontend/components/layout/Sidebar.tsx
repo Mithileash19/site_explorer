@@ -31,7 +31,7 @@ export default function Sidebar() {
       <div className="flex items-center gap-2 px-4 py-4 border-b border-[#1f2937]">
         <Activity className="text-blue-400 shrink-0" size={20} />
         <span className="font-semibold text-sm text-slate-100 leading-tight truncate">
-          AMR Intelligence<br />
+          AMR Support<br />
           <span className="text-blue-400 font-normal text-xs">Platform</span>
         </span>
       </div>

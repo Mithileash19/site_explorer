@@ -69,6 +69,9 @@ class _Settings:
     # These fields are optional and can remain empty when integrations are disabled.
     slack_bot_token: str = resolve_slack_bot_token()
     grafana_api_key: str = os.getenv("GRAFANA_API_KEY", "")
+    grafana_url:     str = os.getenv("GRAFANA_URL",     "")
+    grafana_service_account_token: str = os.getenv("GRAFANA_SERVICE_ACCOUNT_TOKEN", "")
+    loki_url:        str = os.getenv("LOKI_URL",        "")
     github_token:    str = os.getenv("GITHUB_TOKEN",    "")
 
     # ── Site Map (sootballs_sites repo) ─────────────────────────────────────────

@@ -281,6 +281,35 @@ class SlackInvestigationService:
             extracted=f"[Unsupported file type: {mimetype}]",
         )
 
+    def _ensure_in_channel(self, client: WebClient, channel_id: str) -> None:
+        """Join a public channel if the bot is not already a member."""
+        try:
+            channel_info = client.conversations_info(channel=channel_id)
+            is_member = (channel_info.get("channel") or {}).get("is_member", False)
+            if is_member:
+                return
+        except SlackApiError:
+            pass  # proceed to join attempt
+
+        try:
+            client.conversations_join(channel=channel_id)
+            logger.info("Auto-joined channel %s to fetch thread.", channel_id)
+        except SlackApiError as exc:
+            join_err = exc.response.get("error", "unknown")
+            if join_err == "method_not_supported_for_channel_type":
+                raise ValueError(
+                    f"The bot is not in channel '{channel_id}' (private channel). "
+                    "Invite the bot manually: /invite @<bot_name>"
+                ) from exc
+            if join_err == "is_archived":
+                raise ValueError(
+                    f"Channel '{channel_id}' is archived and cannot be joined."
+                ) from exc
+            raise ValueError(
+                f"Could not join channel '{channel_id}' ({join_err}). "
+                "Invite the bot to the channel first."
+            ) from exc
+
     def _fetch_thread_messages(
         self,
         ref: ParsedSlackThreadRef,
@@ -291,6 +320,7 @@ class SlackInvestigationService:
         cursor = None
         messages: List[SlackThreadMessage] = []
         attachments: List[SlackThreadAttachment] = []
+        _auto_joined = False
 
         while len(messages) < max_messages:
             limit = min(200, max_messages - len(messages))
@@ -304,10 +334,28 @@ class SlackInvestigationService:
                 )
             except SlackApiError as exc:
                 err = exc.response.get("error", "unknown_error")
+                if err == "not_in_channel" and not _auto_joined:
+                    self._ensure_in_channel(client, ref.channel_id)
+                    _auto_joined = True
+                    continue  # retry with the joined channel
+                if err == "not_in_channel":
+                    raise ValueError(
+                        f"Bot is not in channel '{ref.channel_id}'. "
+                        "Invite the bot to the channel first."
+                    ) from exc
                 if err == "channel_not_found":
                     raise ValueError("Channel not found. Check the Slack thread URL.") from exc
                 if err == "thread_not_found":
                     raise ValueError("Thread not found. Check the Slack thread URL.") from exc
+                if err == "missing_scope":
+                    raise RuntimeError(
+                        "Missing Slack API scopes. Ensure the bot token has "
+                        "'channels:history', 'groups:history', and 'channels:join' scopes."
+                    ) from exc
+                if err == "invalid_auth":
+                    raise RuntimeError(
+                        "Invalid Slack token. Check SLACK_BOT_TOKEN in backend/.env and recreate the backend container."
+                    ) from exc
                 raise RuntimeError(f"Slack API error: {err}") from exc
 
             for raw in resp.get("messages", []):

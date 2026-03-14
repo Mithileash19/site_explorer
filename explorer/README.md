@@ -48,6 +48,19 @@ bash setup.sh --docker
 
 Open **http://localhost** in your browser.
 
+### Docker with hot reload (frontend dev)
+
+Use this when you want code changes to appear immediately in VS Code Simple Browser without rebuilding images.
+
+```bash
+cd unified_platform
+bash setup.sh --docker-dev
+```
+
+Open **http://localhost:3000** (or **http://localhost**) and edits in `frontend/` will hot-reload.
+
+Docker note: the bundled Ollama container is exposed on `http://localhost:11435` to avoid conflicts with a host Ollama daemon already using `11434`.
+
 ### Local development
 
 ```bash

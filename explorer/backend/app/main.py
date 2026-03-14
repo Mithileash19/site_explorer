@@ -38,14 +38,20 @@ if settings.site_sync_enabled:
     GitSyncEngine().sync()
 
 # ── Routers ───────────────────────────────────────────────────────────────────
-from app.routes import health, sites, bags, investigation, slack_investigation
+from app.routes import health, sites, bags, investigation, slack_investigation, analyse
 from app.routes import sitemap as sitemap_route
+from app.routes import grafana as grafana_route
+from app.routes import logs as logs_route
+from services.ai.slack_investigation_service import SlackInvestigationService
 
 health.register_singletons(llm_service, matcher, site_manager)
 sites.register_singletons(site_manager)
 bags.register_singletons(llm_service, site_manager)
 investigation.register_singletons(inv_engine, llm_service)
 slack_investigation.register_singletons(llm_service)
+grafana_route.register_singletons()
+analyse.register_singletons(llm_service, SlackInvestigationService(llm_service))
+logs_route.register_singletons(grafana_route._svc)
 
 # ── FastAPI app ───────────────────────────────────────────────────────────────
 app = FastAPI(
@@ -71,6 +77,9 @@ app.include_router(bags.router)
 app.include_router(investigation.router)
 app.include_router(slack_investigation.router)
 app.include_router(sitemap_route.router)
+app.include_router(grafana_route.router)
+app.include_router(analyse.router)
+app.include_router(logs_route.router)
 
 
 @app.exception_handler(Exception)

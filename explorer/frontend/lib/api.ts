@@ -252,3 +252,138 @@ export async function getSlackLLMStatus(): Promise<SlackLLMStatusResponse> {
   const { data } = await http.get<SlackLLMStatusResponse>("/slack/status");
   return data;
 }
+
+// ── Grafana ─────────────────────────────────────────────────────────────────
+
+import type {
+  GrafanaLogsResponse,
+  GrafanaStatusResponse,
+  AnalyseRequest,
+  AnalyseResponse,
+  LokiQueryResponse,
+  LokiVolumeBucket,
+} from "./types";
+
+export async function getGrafanaStatus(): Promise<GrafanaStatusResponse> {
+  const { data } = await http.get<GrafanaStatusResponse>("/grafana/status");
+  return data;
+}
+
+export async function fetchGrafanaLogs(params: {
+  site: string;
+  hostname?: string;
+  deployment?: string;
+  filter?: string;
+  from_ms?: number;
+  to_ms?: number;
+  max_lines?: number;
+  datasource?: string;
+}): Promise<GrafanaLogsResponse> {
+  const { data } = await http.get<GrafanaLogsResponse>("/grafana/logs", { params });
+  return data;
+}
+
+// ── Combined AI Analyse ─────────────────────────────────────────────────────
+
+export async function analyseLogsAndSlack(payload: AnalyseRequest): Promise<AnalyseResponse> {
+  const { data } = await http.post<AnalyseResponse>("/investigate/analyse", payload);
+  return data;
+}
+
+// ── Log Viewer (Grafana-style) ──────────────────────────────────────────────
+
+export async function fetchLogHostnames(
+  site: string,
+  datasource?: string,
+): Promise<string[]> {
+  const { data } = await http.get<string[]>("/logs/hostnames", {
+    params: { site, datasource },
+  });
+  return data;
+}
+
+export async function fetchLogDeployments(
+  site: string,
+  hostname?: string,
+  datasource?: string,
+): Promise<string[]> {
+  const { data } = await http.get<string[]>("/logs/deployments", {
+    params: { site, hostname, datasource },
+  });
+  return data;
+}
+
+export async function fetchLogs(params: {
+  env: string;
+  site: string;
+  hostname?: string;
+  deployment?: string;
+  search?: string;
+  exclude?: string;
+  from_ms?: number;
+  to_ms?: number;
+  max_lines?: number;
+}): Promise<GrafanaLogsResponse> {
+  const { data } = await http.get<GrafanaLogsResponse>("/logs", { params });
+  return data;
+}
+
+// ── Loki Direct Endpoints (new) ─────────────────────────────────────────────
+
+export async function fetchLogEnvironments(): Promise<string[]> {
+  const { data } = await http.get<string[]>("/logs/environments");
+  return data;
+}
+
+export async function fetchLogSites(env: string): Promise<string[]> {
+  const { data } = await http.get<string[]>("/logs/sites", { params: { env } });
+  return data;
+}
+
+export async function fetchLogHostnamesV2(
+  env: string,
+  site: string,
+): Promise<string[]> {
+  const { data } = await http.get<string[]>("/logs/hostnames", {
+    params: { env, site },
+  });
+  return data;
+}
+
+export async function fetchLogDeploymentsV2(
+  env: string,
+  site: string,
+  hostname: string,
+): Promise<string[]> {
+  const { data } = await http.get<string[]>("/logs/deployments", {
+    params: { env, site, hostname },
+  });
+  return data;
+}
+
+export async function fetchLogVolume(params: {
+  env: string;
+  site: string;
+  hostname?: string;
+  deployment?: string;
+  from?: number;
+  to?: number;
+}): Promise<LokiVolumeBucket[]> {
+  const { data } = await http.get<LokiVolumeBucket[]>("/logs/volume", { params });
+  return data;
+}
+
+export async function fetchLogQuery(params: {
+  env: string;
+  site: string;
+  hostname?: string;
+  deployment?: string;
+  search?: string;
+  exclude?: string;
+  from?: number;
+  to?: number;
+  limit?: number;
+}): Promise<LokiQueryResponse> {
+  const { data } = await http.get<LokiQueryResponse>("/logs/query", { params });
+  return data;
+}

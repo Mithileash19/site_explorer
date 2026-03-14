@@ -345,3 +345,84 @@ export interface APIError {
   detail: string;
   status?: number;
 }
+
+// ──────────────────────────────────────────────
+// Grafana Logs
+// ──────────────────────────────────────────────
+export interface GrafanaLogLine {
+  timestamp_ms: number;
+  labels: Record<string, string>;
+  line: string;
+}
+
+export interface GrafanaLogsResponse {
+  site: string;
+  hostname: string;
+  deployment: string | null;
+  from_ms: number;
+  to_ms: number;
+  line_count: number;
+  logs: GrafanaLogLine[];
+}
+
+export interface GrafanaStatusResponse {
+  status: string;
+  grafana_version: string | null;
+  org_name: string | null;
+  loki_datasources: string[];
+  fix: string | null;
+}
+
+// ──────────────────────────────────────────────
+// Combined Analyse (log + slack)
+// ──────────────────────────────────────────────
+export interface AnalyseLogEntry {
+  timestamp_ms: number;
+  level: string;
+  hostname: string;
+  deployment: string;
+  message: string;
+  labels: Record<string, string>;
+}
+
+export interface AnalyseRequest {
+  logs: AnalyseLogEntry[];
+  time_from?: string;
+  time_to?: string;
+  site_id?: string;
+  env?: string;
+  hostname?: string;
+  deployment?: string;
+  slack_thread_url?: string;
+  issue_description: string;
+}
+
+export interface AnalyseResponse {
+  model_used: string;
+  has_images: boolean;
+  slack_messages: number;
+  log_count: number;
+  summary: string;
+}
+
+// ──────────────────────────────────────────────
+// Loki Log Query (new direct-Loki endpoints)
+// ──────────────────────────────────────────────
+export interface LokiLogLine {
+  ts: string;
+  line: string;
+  labels: Record<string, string>;
+}
+
+export interface LokiQueryResponse {
+  lines: LokiLogLine[];
+  total_count: number;
+  limit: number;
+  from_ms: number;
+  to_ms: number;
+}
+
+export interface LokiVolumeBucket {
+  ts: number;
+  count: number;
+}

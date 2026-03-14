@@ -3,7 +3,7 @@ import "./globals.css";
 import Sidebar from "@/components/layout/Sidebar";
 
 export const metadata: Metadata = {
-  title: "AMR Intelligence Platform",
+  title: "AMR Support",
   description: "Unified ROS bag analysis, fleet management and AI-powered incident investigation",
 };
 
